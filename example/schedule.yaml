@@ -1,0 +1,18 @@
+fixed5yr1:
+  rate:        1.5%
+  years:       5
+  repayment:   900
+  downpayment: 150000
+  overpay:     10%
+fixed5yr2:
+  rate:        3%
+  years:       5
+  repayment:   1050
+  downpayment: 10%
+  overpay:     10%
+fixed5yr333:
+  rate:        4.5%
+  years:       5
+  repayment:   1200
+  downpayment: 10%
+  overpay:     10%
