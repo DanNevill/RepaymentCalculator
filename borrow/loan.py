@@ -156,7 +156,9 @@ class loan(object):
         print("""
 +============================================+
 |     LOAN REPAYMENT BEGINS ({0})     |
-+============================================+""".format(paydatestr))
++============================================+
+
+""".format(paydatestr))
 
         # Foreach specified mortgage
         # pay off oustanding and update

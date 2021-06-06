@@ -41,8 +41,6 @@ class mortgage(object):
         # Pad everything to 10 chars
         #
         return ("""
-
-
 +======  COMMENCING MORTGAGE DETAILS  =======+
         
     Amount     :  £{0:10.2f}
@@ -52,6 +50,7 @@ class mortgage(object):
     Interest   :   {6:10.2f}% for {7} years
 
 +==========  Commencing:  {8}  ==========+
+
 """.format(self.amount,
            sign,
            downpayment,
@@ -166,14 +165,6 @@ class mortgage(object):
             interests   += interest
             outstanding += interest
 
-            # If overpay specified
-            # then calculate the amount
-            #
-            if self.overpay:
-                overpayment  = self.calculate_overpay(date, outstanding)
-                repayments  += overpayment
-                outstanding -= overpayment
-
             # While amount outstanding
             # update remaining and paid 
             #
@@ -183,6 +174,14 @@ class mortgage(object):
                 outstanding -= repayment
             else:
                 break
+
+            # If overpay specified
+            # then calculate the amount
+            #
+            if self.overpay:
+                overpayment  = self.calculate_overpay(date, outstanding)
+                repayments  += overpayment
+                outstanding -= overpayment
 
         return (interests, repayments + downpayment, date)
 
@@ -279,18 +278,21 @@ class mortgage(object):
             # Repay lump sum off
             # the oustanding amount
             #
-            lump = self.lump if (outstanding > self.lump) else outstanding
-            self.lump = (outstanding - lump) * self.overpay
-            
+            lump       = self.lump if (outstanding > self.lump) else outstanding
+            after_lump = outstanding - lump
+            self.lump  = after_lump * self.overpay
+
+            spacing    = "\n\n" if after_lump else ""
+
             # Print overpayment to 2 d.p.
             #
-            print("""
+            if lump:
+                print("""
 ---   {0} Overpayment: £{1:10.2f}   ---
-              New balance: £{2:10.2f}
-
-            """.format(date.strftime("%b '%y"), 
-                       lump,
-                       (outstanding - lump)))
+              New balance: £{2:10.2f}{3}""".format(date.strftime("%b '%y"), 
+                                                   lump,
+                                                   after_lump,
+                                                   spacing))
 
         return lump
 
