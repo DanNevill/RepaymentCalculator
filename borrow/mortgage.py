@@ -12,6 +12,7 @@ class mortgage(object):
         self.rate        = rate
         self.repayment   = repayment
         self.overpay     = overpay
+        self.lump        = 0
         self.duration    = duration
         self.downpayment = downpayment
         self.start       = "N/A"
@@ -84,7 +85,7 @@ class mortgage(object):
         # of the term of the mortgage
         # return a payment date object
         #
-        end   = self.start + relativedelta(years=self.duration)
+        end   = self.start + relativedelta(years=self.duration) - relativedelta(months=1)
         start = self.start + relativedelta(months=1)
         for current in rrule(freq=MONTHLY, dtstart=start, until=end):
             yield current
@@ -140,6 +141,9 @@ class mortgage(object):
         #
         print(self)
 
+        if self.overpay:
+            self.lump = outstanding * self.overpay
+        
         # If downpayment exists then
         # determine how to print it
         # and do so
@@ -161,6 +165,14 @@ class mortgage(object):
             interest     = self.calculate_interest(outstanding)
             interests   += interest
             outstanding += interest
+
+            # If overpay specified
+            # then calculate the amount
+            #
+            if self.overpay:
+                overpayment  = self.calculate_overpay(date, outstanding)
+                repayments  += overpayment
+                outstanding -= overpayment
 
             # While amount outstanding
             # update remaining and paid 
@@ -235,12 +247,6 @@ class mortgage(object):
         print("      {0} - Outstanding: £{1:10.2f}".format(date.strftime("%b '%y"), 
                                                            (outstanding - repayment)))
 
-        # If overpay specified
-        # then calculate the amount
-        #
-        if self.overpay:
-            repayment += self.calculate_overpay(date, outstanding - repayment)
-            
         return repayment
 
 
@@ -261,31 +267,30 @@ class mortgage(object):
         overpayment dates in a yearly cadence from
         the initial mortgage date."""
 
-
-        lump = 0
-
-        # Calculate the first anniversary of
-        # the mortgage to start the overpay
-        #
-        first = self.start + relativedelta(years=1)
+        lump    = 0
+        paydate = self.start - relativedelta(months=1) 
 
         # Foreach year anniversary
         # of the mortgage calculate
         # the amount to overpay by
         #
-        if (date in [ d for d in rrule(freq=YEARLY, dtstart=first, count=(self.duration-1))]):
+        if (date in [ d for d in rrule(freq=YEARLY, dtstart=paydate, count=(self.duration + 1))]):
 
             # Repay lump sum off
             # the oustanding amount
             #
-            lump = outstanding * self.overpay
-            lump = lump if (outstanding > lump) else outstanding
-
+            lump = self.lump if (outstanding > self.lump) else outstanding
+            self.lump = (outstanding - lump) * self.overpay
+            
             # Print overpayment to 2 d.p.
             #
             print("""
----   Overpayment ({0}): £{1:10.2f}   ---
-            """.format(date.strftime("%b '%y"), lump))
+---   {0} Overpayment: £{1:10.2f}   ---
+              New balance: £{2:10.2f}
+
+            """.format(date.strftime("%b '%y"), 
+                       lump,
+                       (outstanding - lump)))
 
         return lump
 
